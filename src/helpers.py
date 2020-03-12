@@ -23,6 +23,15 @@ def load_model(model_type):
     return joblib.load("trained_models/{}.pkl".format(model_type))
 
 
+def print_runtime(runtime: float) -> None:
+    """
+    Print runtime in seconds.
+    :param runtime: the runtime
+    :return: None
+    """
+    print("\n--- Runtime: {} seconds ---".format(runtime))
+
+
 def print_error_message():
     """
 

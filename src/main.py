@@ -1,4 +1,5 @@
 import argparse
+import time
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -66,7 +67,7 @@ def parse_command_line_arguments():
                         default=False,
                         help="Include this flag to run the grid search algorithm to determine the optimal "
                              "hyperparameters for the regression model. Only works for linear regression with either"
-                             "Ridge or Lasso regression."
+                             "Ridge or Lasso regularisation."
                         )
     parser.add_argument("-d", "--debug",
                         action="store_true",
@@ -196,6 +197,10 @@ def training_regression_models(X, y):
     :param y:
     :return:
     """
+    # Start recording time.
+    start_time = time.time()
+
+    # Parse which model to train.
     if config.model == "linear":
         print("\nTraining Linear Regression model:\n")
         general_linear_regression(X, y)
@@ -222,6 +227,9 @@ def training_regression_models(X, y):
         random_forest_generator_regression(X, y)
     else:
         print_error_message()
+
+    # Print training runtime.
+    print_runtime(round(time.time() - start_time, 2))
 
 
 def final_evaluation(test_set, final_model):
