@@ -1,3 +1,4 @@
+import argparse
 import joblib
 import random
 
@@ -12,36 +13,76 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.svm import SVR
 
+import config as config
 
-RANDOM_SEED = 42
 
+def main() -> None:
+    """
+    Program entry point. Parses command line arguments to decide which agent to run.
+    :return: None
+    """
+    parse_command_line_arguments()
 
-def main():
     # The data is imported into a pandas DataFrame.
     df = pd.read_csv("data/train.csv")
 
     # Split Train/Test data
     train_set, test_set = split_data(df)
 
-    # We make a copy of the training set used for data exploration purposes without introducing the risk of
-    # unvoluntarily harming the original training set.
-    exploration_set = train_set.copy()
-
-    # Visualising the data to gain insights.
-    # visualise_data(exploration_set)
-    # data_correlation(exploration_set)
-
-    # Preparing the inputs and choosing a suitable subset.
-    X, y = input_preparation(train_set)
-
-    # Selecting and training a regression model.
-    training_regression_models(X, y)
-
-    # Evaluating the final performance of the model on the test set.
-    # final_evaluation()
+    if config.section == "data_vis":
+        # We make a copy of the training set used for data exploration purposes without introducing the risk of
+        # unvoluntarily harming the original training set.
+        exploration_set = train_set.copy()
+        # Visualising the data to gain insights.
+        visualise_data(exploration_set)
+        data_correlation(exploration_set)
+    elif config.section == "train" or config.section == "test":
+        X, y = input_preparation(train_set)  # Preparing the inputs and choosing a suitable subset.
+        if config.section == "train":
+            training_regression_models(X, y)  # Selecting and training a regression model.
+        elif config.section == "test":
+            final_model = load_model("ridge_reg")
+            final_evaluation(test_set, final_model=final_model)
+        else:
+            print_error_message()
+    else:
+        print_error_message()
 
     # Function used to generate scatter plot used to show stratified sampling example in report.
     # random_plot()
+
+
+def parse_command_line_arguments():
+    """
+    Parse command line arguments and save them in config.py.
+    :return: None
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--section",
+                        required=True,
+                        help="The section of the code to run. Must be either 'data_vis', 'train' or 'test'."
+                        )
+    parser.add_argument("-m", "--model",
+                        default="linear",
+                        help="The regression model to use for training. Must be either 'linear', 'ridge', 'lasso', "
+                             "'elastic_net', 'decision_tree', 'mlp', 'svm' or 'random_forest_generator'."
+                        )
+    parser.add_argument("-g", "--gridsearch",
+                        action="store_true",
+                        default=False,
+                        help="Include this flag to run the grid search algorithm to determine the optimal "
+                             "hyperparameters for the regression model. Only works for linear regression with either"
+                             "Ridge or Lasso regression."
+                        )
+    parser.add_argument("-d", "--debug",
+                        action="store_true",
+                        help="Include this flag additional print statements for debugging purposes."
+                        )
+    args = parser.parse_args()
+    config.section = args.section
+    config.model = args.model
+    config.is_grid_search = args.gridsearch
+    config.debug = args.debug
 
 
 def split_data(data):
@@ -49,12 +90,13 @@ def split_data(data):
     # A randomised 80%/20% split is used rather than stratified sampling because the dataset is large enough.
     # The random number generator's seed is set at a fixed value to ensure that it always generates the same shuffle
     # indices when re-running the code, ensuring reproducibility.
-    train_set, test_set = train_test_split(data, test_size=0.2, random_state=RANDOM_SEED)
+    train_set, test_set = train_test_split(data, test_size=0.2, random_state=config.RANDOM_SEED)
 
     # The train set should be 80% the size of the original, whereas the test set should 20%.
     # Now, only the train_set is used, while the test_set is set aside and forgotten about until the very end when
     # the model's performance will be evaluated.
-    print("Train set size = {}, Test set size = {}".format(train_set.shape, test_set.shape))
+    if config.debug:
+        print("Train set size = {}, Test set size = {}".format(train_set.shape, test_set.shape))
 
     return train_set, test_set
 
@@ -94,7 +136,7 @@ def data_correlation(exploration_set):
     # closer it is to 1, the stronger the correlation is, and vice versa when the correlation is close to -1.
     # A correlation of 0 can be translated as a lack of linear correlation.
     correlation_matrix = exploration_set.corr()
-    print("10 features with the strongest correlation with 'critical_temp':")
+    print("\n10 features with the strongest correlation with 'critical_temp':")
     print(correlation_matrix["critical_temp"].sort_values(ascending=False).head(11))
     print("\n10 features with the weakest correlation with 'critical_temp':")
     print(correlation_matrix["critical_temp"].sort_values(ascending=True).head(10))
@@ -133,7 +175,8 @@ def input_preparation(train_set):
 
     # We can check that the split was correctly executed by ensuring that there are 82-1=81 columns in X, and only 1
     # column in y.
-    print("Predictors X size = {}, Target y size = {}".format(X.shape, y.shape))
+    if config.debug:
+        print("Predictors X size = {}, Target y size = {}".format(X.shape, y.shape))
 
     return X, y
 
@@ -142,21 +185,39 @@ def training_regression_models(X, y):
     """
     Selecting and Training a regression model.
     The following errors are achieved by the paper when using multiple regression:
-        -RMSE = 17.6K
-        - R^2 = 0.74
+        * RMSE = 17.6K
+        * R^2 = 0.74
     These results will be compared to our different models' results
     :param X:
     :param y:
     :return:
     """
-    # general_linear_regression(X, y)
-    linear_ridge_regression(X, y)
-    # if "linear_reg":
-    #     general_linear_regression(X, y)
-    # elif "ridge_reg":
-    #     linear_ridge_regression(X, y)
-    # elif "lasso_reg":
-
+    if config.model == "linear":
+        print("\nTraining Linear Regression model:\n")
+        general_linear_regression(X, y)
+    elif config.model == "ridge":
+        print("\nTraining Linear Regression model with Ridge regularisation:\n")
+        linear_ridge_regression(X, y)
+    elif config.model == "lasso":
+        print("\nTraining Linear Regression model with Lasso regularisation:\n")
+        linear_lasso_regression(X, y)
+    elif config.model == "elastic_net":
+        print("\nTraining Linear Regression model with Elastic Net regularisation:\n")
+        elastic_net_regression(X, y)
+    elif config.model == "decision_tree":
+        print("\nTraining Decision Tree Regression model:\n")
+        decision_tree_regression(X, y)
+    elif config.model == "mlp":
+        print("\nTraining Multi Layer Perceptron Regression model:\n")
+        mlp_regression(X, y)
+    elif config.model == "svm":
+        print("\nTraining SVM Regression model:\n")
+        svm_regression(X, y)
+    elif config.model == "random_forest_generator":
+        print("\nTraining Random Forest Generator Regression model:\n")
+        random_forest_generator_regression(X, y)
+    else:
+        print_error_message()
 
 
 def quick_prediction_test(model, X, y):
@@ -201,7 +262,7 @@ def display_detailed_scores(scores: list, metric_name: str) -> None:
         metric_unit = "%"
     else:
         metric_unit = ""
-    print("\n{} scores achieved: {}".format(metric_name, scores))
+    print("\n{} scores: {}".format(metric_name, scores))
     print("\nMean {}: {}{} (+/-{})".format(metric_name, round(scores.mean(), 2), metric_unit, round(scores.std(), 2)))
 
 
@@ -217,6 +278,9 @@ def plot_best_fit(y_actual, y_predicted, fig_name: str = "") -> None:
     plt.scatter(y_actual, y_predicted, s=20, alpha=0.25, color="green")
     plt.plot(y_actual, (m * y_actual) + b, color='orange')
     plt.savefig("plots/plot_{}.png".format(fig_name))
+    plt.xlabel("Actual")
+    plt.ylabel("Predicted")
+    plt.title("{} best fit".format(fig_name))
     plt.show()
 
 
@@ -318,25 +382,28 @@ def linear_ridge_regression(X, y):
     # Using the same model with 10-fold cross validation.
     k_fold_cross_validation(ridge_regression, X, y)
 
-    # Applying grid search algorithm to the Ridge Regression model to explore combinations of hyperparameters to find
-    # the best hyperparameters for a model, since doing so manually is a very time consuming task.
-    parameters = {
-        "alpha": [0.1, 1, 10],
-        "normalize": [True, False],
-        "solver": ["auto", "svd", "cholesky", "lsqr", "sparse_cg", "sag", "saga"]
-    }
-    ridge_reg_gs_results = grid_search_algorithm(Ridge(), X, y, parameters, folds=5)
-    ridge_reg_gs_results_df = pd.DataFrame(ridge_reg_gs_results.cv_results_)
-    ridge_reg_gs_results_df.to_csv("grid_search_results/ridge_reg_grid_search_results.csv")
+    if config.is_grid_search:
+        print("\nPerforming grid search to find optimal hyperparameters...")
 
-    # Top 5 hyperparameters found for Ridge Regression.
-    print("Top 5 hyperparameters combinations found for Ridge Regression:")
-    ridge_reg_gs_results_df.sort_values(by=['rank_test_score']).head(5)
+        # Applying grid search algorithm to the Ridge Regression model to explore combinations of hyperparameters to
+        # find the best hyperparameters for a model, since doing so manually is a very time consuming task.
+        parameters = {
+            "alpha": [0.1, 1, 10],
+            "normalize": [True, False],
+            "solver": ["auto", "svd", "cholesky", "lsqr", "sparse_cg", "sag", "saga"]
+        }
+        ridge_reg_gs_results = grid_search_algorithm(Ridge(), X, y, parameters, folds=5)
+        ridge_reg_gs_results_df = pd.DataFrame(ridge_reg_gs_results.cv_results_)
+        ridge_reg_gs_results_df.to_csv("grid_search_results/ridge_reg_grid_search_results.csv")
 
-    # Best model found by grid search algorithm for Ridge Regression.
-    final_ridge_reg_model = ridge_reg_gs_results.best_estimator_
-    print("\nBest model hyperparameters found by grid search algorithm for Ridge Regression:")
-    print(final_ridge_reg_model)
+        # Top 5 hyperparameters found for Ridge Regression.
+        print("Top 5 hyperparameters combinations found for Ridge Regression:")
+        ridge_reg_gs_results_df.sort_values(by=['rank_test_score']).head(5)
+
+        # Best model found by grid search algorithm for Ridge Regression.
+        final_ridge_reg_model = ridge_reg_gs_results.best_estimator_
+        print("\nBest model hyperparameters found by grid search algorithm for Ridge Regression:")
+        print(final_ridge_reg_model)
 
 
 def linear_lasso_regression(X, y):
@@ -358,25 +425,28 @@ def linear_lasso_regression(X, y):
     # Using the same model with 10-fold cross validation.
     k_fold_cross_validation(lasso_regression, X, y, folds=5)
 
-    # Applying grid search algorithm to the Ridge Regression model
-    parameters = {
-        "alpha": [0.0001, 0.001, 0.01, 0.1, 0, 1, 10],
-        "tol": [0.01, 0.1, 1],
-        "positive": [True, False],
-        "selection": ["cyclic", "random"]
-    }
-    lasso_reg_gs_results = grid_search_algorithm(Lasso(), parameters, folds=5)
-    lasso_reg_gs_results_df = pd.DataFrame(lasso_reg_gs_results.cv_results_)
-    lasso_reg_gs_results_df.to_csv("grid_search_resultslasso_reg_grid_search_results.csv")
+    if config.is_grid_search:
+        print("\nPerforming grid search to find optimal hyperparameters...")
 
-    # Top 5 hyperparameters found for Lasso Regression.
-    print("Top 5 hyperparameters combinations found for Lasso Regression:")
-    lasso_reg_gs_results_df.sort_values(by=['rank_test_score']).head(5)
+        # Applying grid search algorithm to the Lasso Regression model
+        parameters = {
+            "alpha": [0.0001, 0.001, 0.01, 0.1, 0, 1, 10],
+            "tol": [0.01, 0.1, 1],
+            "positive": [True, False],
+            "selection": ["cyclic", "random"]
+        }
+        lasso_reg_gs_results = grid_search_algorithm(Lasso(), parameters, folds=5)
+        lasso_reg_gs_results_df = pd.DataFrame(lasso_reg_gs_results.cv_results_)
+        lasso_reg_gs_results_df.to_csv("grid_search_results/lasso_reg_grid_search_results.csv")
 
-    # Best model found by grid search algorithm for Lasso Regression.
-    final_lasso_reg_model = lasso_reg_gs_results.best_estimator_
-    print("\nBest model hyperparameters found by grid search algorithm for Lasso Regression:")
-    print(final_lasso_reg_model)
+        # Top 5 hyperparameters found for Lasso Regression.
+        print("Top 5 hyperparameters combinations found for Lasso Regression:")
+        lasso_reg_gs_results_df.sort_values(by=['rank_test_score']).head(5)
+
+        # Best model found by grid search algorithm for Lasso Regression.
+        final_lasso_reg_model = lasso_reg_gs_results.best_estimator_
+        print("\nBest model hyperparameters found by grid search algorithm for Lasso Regression:")
+        print(final_lasso_reg_model)
 
 
 def elastic_net_regression(X, y):
@@ -386,7 +456,7 @@ def elastic_net_regression(X, y):
     :param y:
     :return:
     """
-    elastic_net_regression = ElasticNet(alpha=0.1, tol=0.1, max_iter=10000)
+    elastic_net_regression = ElasticNet()
     elastic_net_regression.fit(X, y)
     quick_prediction_test(elastic_net_regression, X, y)
     evaluate_model_error(elastic_net_regression, y, elastic_net_regression.predict(X))
@@ -464,6 +534,16 @@ def final_evaluation(test_set, final_model):
     X_test = test_set.drop("critical_temp", axis=1)
     y_test = test_set["critical_temp"].copy()
     evaluate_model_error(final_model, y_test, final_model.predict(X_test))
+
+
+def print_error_message():
+    """
+
+    :return:
+    """
+    print("Wrong command line arguments passed, please use 'python main.py --help' for instructions on which arguments"
+          "to pass to the program.")
+    exit(1)
 
 
 def random_plot() -> None:
