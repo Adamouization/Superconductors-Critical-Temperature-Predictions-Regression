@@ -124,11 +124,9 @@ def visualise_data(exploration_set) -> None:
     print(exploration_set.describe())
 
     # Plot each numerical attribute in a small histogram to more easily visualise it and make a quick analysis.
-    # todo: fix
-    # get_ipython().run_line_magic('matplotlib', 'inline')
-    # exploration_set.hist(bins=50, figsize=(25, 18))
-    # plt.savefig("plots/all_features_histogram.png")
-    # plt.show()
+    exploration_set.hist(bins=50, figsize=(25, 18))
+    plt.savefig("plots/all_features_histogram.png")
+    plt.show()
 
 
 def data_correlation(exploration_set):
@@ -148,7 +146,7 @@ def data_correlation(exploration_set):
 
     # The standard correlation coefficients of the target attribute and the 5 attributes with the highest correlation
     # are plotted in a scatter plot.
-    attributes = [
+    features_with_highest_correlation = [
         "critical_temp",
         "wtd_std_ThermalConductivity",
         "range_ThermalConductivity",
@@ -156,14 +154,15 @@ def data_correlation(exploration_set):
         "range_atomic_radius",
         "wtd_entropy_atomic_mass"
     ]
-
-    # todo fix
-    pd.plotting.scatter_matrix(exploration_set[attributes], figsize=(25, 18))
+    pd.plotting.scatter_matrix(exploration_set[features_with_highest_correlation], figsize=(25, 18))
+    plt.savefig("plots/scatter_plot_features_with_highest_correlation.png")
+    plt.show()
 
     # Because wtd_std_ThermalConductivity has the highest correlation with critical_temp, we can zoom in on the scatter
     # plot between these two variables.
-    # todo fix
     exploration_set.plot(kind="scatter", x="wtd_std_ThermalConductivity", y="critical_temp", alpha=0.1)
+    plt.savefig("plots/scatter_plot_wtd_std_ThermalConductivity.png")
+    plt.show()
 
 
 def input_preparation(train_set):
