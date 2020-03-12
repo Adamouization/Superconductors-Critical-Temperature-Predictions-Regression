@@ -34,7 +34,7 @@ def print_runtime(runtime: float) -> None:
 
 def print_error_message():
     """
-
+    Print error message and exit code when a CLI-related error occurs.
     :return:
     """
     print("Wrong command line arguments passed, please use 'python main.py --help' for instructions on which arguments"

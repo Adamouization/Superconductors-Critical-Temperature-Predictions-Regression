@@ -61,7 +61,7 @@ def display_detailed_scores(scores: list, metric_name: str) -> None:
 
 def plot_best_fit(y_actual, y_predicted, fig_name: str = "") -> None:
     """
-
+    Plot predicted and actual values and the line of best fit.
     :param y_actual:
     :param y_predicted:
     :param fig_name:
@@ -70,10 +70,10 @@ def plot_best_fit(y_actual, y_predicted, fig_name: str = "") -> None:
     m, b = np.polyfit(y_actual, y_predicted, 1)
     plt.scatter(y_actual, y_predicted, s=20, alpha=0.25, color="green")
     plt.plot(y_actual, (m * y_actual) + b, color='orange')
-    plt.savefig("plots/plot_{}.png".format(fig_name))
     plt.xlabel("Actual")
     plt.ylabel("Predicted")
     plt.title("{} best fit".format(fig_name))
+    plt.savefig("plots/plot_{}.png".format(fig_name))
     plt.show()
 
 
@@ -117,12 +117,12 @@ def grid_search_algorithm(model, X, y, parameters, folds=5):
     return grid_search
 
 
-def general_linear_regression(X, y):
+def general_linear_regression(X, y) -> None:
     """
-
-    :param X:
-    :param y:
-    :return:
+    Fit general linear regression model
+    :param X: train input
+    :param y: train output
+    :return: None
     """
     # Train a linear regression model and assess its performance.
     linear_regression = LinearRegression(fit_intercept=True, normalize=True)
@@ -137,15 +137,15 @@ def general_linear_regression(X, y):
     k_fold_cross_validation(linear_regression, X, y)
 
 
-def linear_ridge_regression(X, y):
+def linear_ridge_regression(X, y) -> None:
     """
-
-    :param X:
-    :param y:
-    :return:
+    Fit ridge linear regression model
+    :param X: train input
+    :param y: train output
+    :return: None
     """
     # Train a linear regression model with Ridge regression and assess its performance.
-    ridge_regression = Ridge(alpha=0.1, solver='svd', normalize=False)
+    ridge_regression = Ridge(alpha=0.1, solver='svd', normalize=False)  # Optimal parameters from by grid search run.
     ridge_regression.fit(X, y)
     quick_prediction_test(ridge_regression, X, y)
     y_prediction = ridge_regression.predict(X)
@@ -182,13 +182,15 @@ def linear_ridge_regression(X, y):
 
 def linear_lasso_regression(X, y):
     """
-
-    :param X:
-    :param y:
-    :return:
+    Fit lasso linear regression model
+    :param X: train input
+    :param y: train output
+    :return: None
     """
     # Train a linear regression model with Lasso regression and assess its performance.
-    lasso_regression = Lasso(alpha=0.0001, tol=0.1, selection="random", positive=False, max_iter=1000)
+    lasso_regression = Lasso(  # Optimal parameters from by grid search run.
+        alpha=0, tol=0.01, selection="random", positive=False, max_iter=1000, normalize=False
+    )
     lasso_regression.fit(X, y)
     quick_prediction_test(lasso_regression, X, y)
     y_prediction = lasso_regression.predict(X)
@@ -209,7 +211,7 @@ def linear_lasso_regression(X, y):
             "positive": [True, False],
             "selection": ["cyclic", "random"]
         }
-        lasso_reg_gs_results = grid_search_algorithm(Lasso(), parameters, folds=5)
+        lasso_reg_gs_results = grid_search_algorithm(Lasso(), X, y, parameters, folds=5)
         lasso_reg_gs_results_df = pd.DataFrame(lasso_reg_gs_results.cv_results_)
         lasso_reg_gs_results_df.to_csv("grid_search_results/lasso_reg_grid_search_results.csv")
 
@@ -225,7 +227,7 @@ def linear_lasso_regression(X, y):
 
 def elastic_net_regression(X, y):
     """
-
+    Briefly explore elastic net linear regression model.
     :param X:
     :param y:
     :return:
@@ -240,7 +242,7 @@ def elastic_net_regression(X, y):
 
 def decision_tree_regression(X, y):
     """
-
+    Briefly explore decision tree regression model.
     :param X:
     :param y:
     :return:
@@ -255,7 +257,7 @@ def decision_tree_regression(X, y):
 
 def mlp_regression(X, y):
     """
-
+    Briefly explore MLP regression model.
     :param X:
     :param y:
     :return:
@@ -270,7 +272,7 @@ def mlp_regression(X, y):
 
 def svm_regression(X, y):
     """
-
+    Briefly explore SVM regression model.
     :param X:
     :param y:
     :return:
@@ -285,7 +287,7 @@ def svm_regression(X, y):
 
 def random_forest_generator_regression(X, y):
     """
-
+    Briefly explore random forest generator regression model.
     :param X:
     :param y:
     :return:

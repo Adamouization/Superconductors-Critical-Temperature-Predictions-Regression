@@ -10,7 +10,7 @@ import config as config
 from helpers import *
 from regression_models import decision_tree_regression, elastic_net_regression, evaluate_model_error, \
     general_linear_regression, linear_lasso_regression, linear_ridge_regression, mlp_regression, \
-    random_forest_generator_regression, svm_regression
+    plot_best_fit, random_forest_generator_regression, svm_regression
 
 
 def main() -> None:
@@ -38,7 +38,7 @@ def main() -> None:
         if config.section == "train":
             training_regression_models(X, y)  # Selecting and training a regression model.
         elif config.section == "test":
-            final_model = load_model("ridge_reg")
+            final_model = load_model("ridge_reg_final")
             final_evaluation(test_set, final_model=final_model)
         else:
             print_error_message()
@@ -84,8 +84,8 @@ def parse_command_line_arguments():
 
 def split_data(data):
     """
-
-    :param data:
+    Split data into training and testing set.
+    :param data: full data
     :return:
     """
     # Before even viewing the data to avoid data snooping, it is split between a training and a testing set.
@@ -269,14 +269,17 @@ def training_regression_models(X, y):
 
 def final_evaluation(test_set, final_model):
     """
-
+    Test the final model on the testing data.
     :param test_set:
     :param final_model:
     :return:
     """
     X_test = test_set.drop("critical_temp", axis=1)
     y_test = test_set["critical_temp"].copy()
-    evaluate_model_error(final_model, y_test, final_model.predict(X_test))
+    X_test[X_test.columns] = StandardScaler().fit_transform(X_test[X_test.columns])
+    final_prediction = final_model.predict(X_test)
+    evaluate_model_error(final_model, y_test, final_prediction)
+    plot_best_fit(final_prediction, y_test, "final_ridge_reg")
 
 
 if __name__ == "__main__":
