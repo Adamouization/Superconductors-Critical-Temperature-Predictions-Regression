@@ -4,6 +4,7 @@ import time
 import pandas as pd
 import seaborn as sns
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 import config as config
 from helpers import *
@@ -213,6 +214,9 @@ def input_preparation(train_set):
     # column in y.
     if config.debug:
         print("Predictors X size = {}, Target y size = {}".format(X.shape, y.shape))
+
+    # Standardisation of the input because features have very different values.
+    X[X.columns] = StandardScaler().fit_transform(X[X.columns])
 
     return X, y
 
