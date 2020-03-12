@@ -2,6 +2,7 @@ import argparse
 import time
 
 import pandas as pd
+import seaborn as sns
 from sklearn.model_selection import train_test_split
 
 import config as config
@@ -139,14 +140,14 @@ def data_correlation(exploration_set):
     # closer it is to 1, the stronger the correlation is, and vice versa when the correlation is close to -1.
     # A correlation of 0 can be translated as a lack of linear correlation.
     correlation_matrix = exploration_set.corr()
-    print("\n10 features with the strongest correlation with 'critical_temp':")
+    print("\n10 features with the strongest positive correlation with 'critical_temp':")
     print(correlation_matrix["critical_temp"].sort_values(ascending=False).head(11))
-    print("\n10 features with the weakest correlation with 'critical_temp':")
+    print("\n10 features with the strongest negative correlation with 'critical_temp':")
     print(correlation_matrix["critical_temp"].sort_values(ascending=True).head(10))
 
     # The standard correlation coefficients of the target attribute and the 5 attributes with the highest correlation
     # are plotted in a scatter plot.
-    features_with_highest_correlation = [
+    features_with_highest_correlation_top_5 = [
         "critical_temp",
         "wtd_std_ThermalConductivity",
         "range_ThermalConductivity",
@@ -154,7 +155,24 @@ def data_correlation(exploration_set):
         "range_atomic_radius",
         "wtd_entropy_atomic_mass"
     ]
-    pd.plotting.scatter_matrix(exploration_set[features_with_highest_correlation], figsize=(25, 18))
+    # Correlation matrix of top 10 features.
+    features_with_highest_correlation_top_10 = features_with_highest_correlation_top_5 + [
+        "wtd_entropy_atomic_radius",
+        "number_of_elements",
+        "range_fie",
+        "entropy_Valence",
+        "wtd_std_atomic_radius"
+    ]
+
+    # Correlation matrix.
+    correlation_heatmap(
+        correlation_matrix.sort_values(
+            'critical_temp', ascending=False
+        ).head(11)[features_with_highest_correlation_top_10]
+    )
+
+    # Scatter plots to visualise correlation
+    pd.plotting.scatter_matrix(exploration_set[features_with_highest_correlation_top_5], figsize=(25, 18))
     plt.savefig("plots/scatter_plot_features_with_highest_correlation.png")
     plt.show()
 
@@ -162,6 +180,20 @@ def data_correlation(exploration_set):
     # plot between these two variables.
     exploration_set.plot(kind="scatter", x="wtd_std_ThermalConductivity", y="critical_temp", alpha=0.1)
     plt.savefig("plots/scatter_plot_wtd_std_ThermalConductivity.png")
+    plt.show()
+
+
+def correlation_heatmap(corr) -> None:
+    """
+    Generates a heatmap for the correlation matrix.
+    :param corr: the correlation matrix.
+    :return: None.
+    """
+    fig, ax = plt.subplots(figsize=(10, 10))
+    sns.heatmap(
+        corr, cmap="YlGnBu", vmax=1.0, center=0, square=True, linewidths=.5, annot=True, cbar_kws={"shrink": .75}
+    )
+    fig.savefig("plots/top_correlation_heatmap.png")
     plt.show()
 
 
