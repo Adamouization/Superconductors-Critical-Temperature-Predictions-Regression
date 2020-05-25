@@ -1,8 +1,8 @@
-# Predicting Superconductors' Critical Temperatures using Regression
+# Predicting Superconductors' Critical Temperatures using Regression [![HitCount](http://hits.dwyl.com/Adamouization/Superconductors-Critical-Temperature-Predictions-Regression.svg)](http://hits.dwyl.com/Adamouization/Superconductors-Critical-Temperature-Predictions-Regression) [![GitHub license](https://img.shields.io/github/license/Adamouization/Superconductors-Critical-Temperature-Predictions-Regression)](https://github.com/Adamouization/Superconductors-Critical-Temperature-Predictions-Regression/blob/master/LICENSE)
 
-This project covers the exploration of various ML techniques used for predicting the critical temperatures required for different superconductors to conduct electrical current with no resistance [1]. Various techniques and decisions are considered and discussed in the [report](https://github.com/Adamouization/ML-Predicting-Superconductivity-Critical-Temperature/blob/master/report/report.pdf) for visualising & analysing the data, extracting its features, training multiple regression models to evaluate which one is suits the data best and make final predictions compared to Hamidieh's findings in the papaer *"A data-driven statistical model for predicting the critical temperature of a superconductor"*.
+This project covers the exploration of various ML techniques used for predicting the critical temperatures required for different superconductors to conduct electrical current with no resistance [1]. Various techniques and decisions are considered and discussed in the [report](https://github.com/Adamouization/Superconductors-Critical-Temperature-Predictions-Regression/blob/master/report/report.pdf) for visualising & analysing the data, extracting its features, training multiple regression models to evaluate which one is suits the data best and make final predictions compared to Hamidieh's findings in the papaer *"A data-driven statistical model for predicting the critical temperature of a superconductor"*.
 
-You can read the [full report here](https://github.com/Adamouization/ML-Predicting-Superconductivity-Critical-Temperature/blob/master/report/report.pdf).
+You can read the [full report here](https://github.com/Adamouization/Superconductors-Critical-Temperature-Predictions-Regression/blob/master/report/report.pdf).
 
 ## Results
 
@@ -12,7 +12,7 @@ An improvement is noticed between the linear regression's final results and Hami
 * R2: 0.74
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Adamouization/ML-Predicting-Superconductivity-Critical-Temperature/master/plots/plot_final_ridge_reg.png?token=AEI7XLE4AXQWEDFBW7CHXBC62TLSO" alt="results" width="50%"/>
+  <img src="https://raw.githubusercontent.com/Adamouization/Superconductors-Critical-Temperature-Predictions-Regression/master/plots/plot_final_ridge_reg.png" alt="results" width="50%"/>
 </p>
 
 ## Usage
